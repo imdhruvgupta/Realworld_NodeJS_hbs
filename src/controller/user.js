@@ -1,4 +1,5 @@
 const {Users} = require('../models');
+const {createToken} = require('../utils/jwt');
 
 async function createUser(userOpts) {
     if(!userOpts.username) {
@@ -10,16 +11,20 @@ async function createUser(userOpts) {
     if(!userOpts.password) {
         throw new Error("Did not supply password");
     }
-
+    
     const user = await Users.create({
         ...userOpts
     })
-
+    
     if(!user) {
         throw new Error("Error creating user");
     }
 
-    return user.get();
+    const token = await createToken(user.get());
+
+    return {
+        user, token
+    };
 }
 
 module.exports = {

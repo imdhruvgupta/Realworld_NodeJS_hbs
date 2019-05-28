@@ -20,13 +20,47 @@ async function createUser(userOpts) {
         throw new Error("Error creating user");
     }
 
-    const token = await createToken(user.get());
-
     return {
-        user, token
+        user
     };
 }
 
+async function verifyUser(userOpts) {
+    if(!userOpts.email) {
+        throw new Error("Did not supply email");
+    }
+    if(!userOpts.password) {
+        throw new Error("Did not supply password");
+    }
+
+    const user = await Users.findOne({
+        where: {
+            email: userOpts.email
+        }
+    });
+
+    console.log(user.get())
+    if(!user) {
+        throw new Error("Email not registered");
+    }
+    if(user.password !== userOpts.password) {
+        throw new Error("Password does not match");
+    }
+
+    const createdUser = await Users.findOne({
+        attributes: ['username', 'email', 'bio', 'image'],
+        where: {
+            email: userOpts.email
+        }
+    });
+
+    const token = await createToken(createdUser.get());
+    
+    return {
+        createdUser, token
+    }
+}
+
 module.exports = {
-    createUser
+    createUser, verifyUser
 }
